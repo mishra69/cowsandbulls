@@ -70,15 +70,15 @@ test("filterCandidates: 4 bulls returns only the exact word", () => {
 });
 
 test("filterCandidates: 0 bulls 0 cows excludes words sharing any scored letters", () => {
-  // guess=back (b,a,c,k), 0 bulls 0 cows means none of b,a,c,k appear as cows
-  // "zinc" shares no letters with "back" → kept
+  // guess=back (b,a,c,k), 0 bulls 0 cows means no shared letters at all
+  // "film" (f,i,l,m) — no letters in common with "back" → kept
   // "back" itself → 4 bulls → excluded
-  // "cake" → shares a,c,k → computeFeedback("back","cake"):
-  //   g=[b,a,c,k] s=[c,a,k,e]; bulls: a at pos 1 is bull (1 bull) → excluded
-  const words = ["zinc", "back", "film"];
+  // "zinc" has 'c' in common with "back" → 1 cow → excluded
+  const words = ["film", "back", "zinc"];
   const result = filterCandidates(words, "back", 0, 0);
-  assert.ok(result.includes("zinc"));
+  assert.ok(result.includes("film"));
   assert.ok(!result.includes("back"));
+  assert.ok(!result.includes("zinc"));
 });
 
 test("filterCandidates: correctly applies README LOST/THAT example", () => {
