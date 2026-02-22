@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Cows & Bulls Solver</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh; background: linear-gradient(160deg, #07080c 0%, #111827 40%, #0c1220 100%);
+    font-family: 'JetBrains Mono', 'SF Mono', monospace; color: #dde1ec;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 20px 16px; overflow-y: auto;
+  }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes slideIn { from { opacity:0; transform:translateX(-10px); } to { opacity:1; transform:translateX(0); } }
+
+  h1 {
+    font-size: 22px; font-weight: 800; letter-spacing: 5px; text-transform: uppercase;
+    background: linear-gradient(135deg, #63b3ed, #b794f4, #f687b3);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .subtitle { font-size: 11px; color: #4a5568; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+  .container { width: 100%; max-width: 520px; display: flex; flex-direction: column; gap: 16px; }
+
+  .card {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px; padding: 20px;
+  }
+  .section-label {
+    font-size: 10px; color: #4a5568; letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 10px; font-weight: 600;
+  }
+  .label-sm {
+    display: block; font-size: 9px; font-weight: 600; letter-spacing: 1.5px;
+    text-transform: uppercase; color: #718096; margin-bottom: 5px;
+  }
+  .label-green { color: #68d391; }
+  .label-yellow { color: #f6ad55; }
+
+  .input-row { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 14px; }
+  .input-row .word-col { flex: 1; }
+  .input-row .num-col { text-align: center; min-width: 70px; }
+
+  #guessInput {
+    width: 100%; padding: 10px 14px; font-size: 18px; font-weight: 700; letter-spacing: 6px;
+    text-transform: uppercase; font-family: inherit; text-align: center;
+    background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px; color: #fff; transition: all 0.2s; outline: none;
+  }
+  #guessInput:focus { border-color: rgba(99,179,237,0.5); box-shadow: 0 0 0 3px rgba(99,179,237,0.15); }
+
+  .num-controls { display: flex; align-items: center; gap: 4px; justify-content: center; }
+  .num-val { font-size: 20px; font-weight: 800; min-width: 22px; text-align: center; }
+  .num-val.green { color: #68d391; }
+  .num-val.yellow { color: #f6ad55; }
+
+  .ctrl-btn {
+    width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700; font-family: inherit;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 7px; color: #e2e8f0; cursor: pointer; user-select: none;
+  }
+  .ctrl-btn:active { background: rgba(255,255,255,0.12); }
+
+  .btn-row { display: flex; gap: 8px; }
+  .btn-primary {
+    flex: 1; padding: 10px 0; font-size: 13px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; font-family: inherit;
+    background: linear-gradient(135deg, #63b3ed, #b794f4);
+    color: #fff; border: none; border-radius: 10px; cursor: pointer;
+    box-shadow: 0 3px 16px rgba(99,179,237,0.25); transition: transform 0.15s;
+  }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-sec {
+    padding: 10px 16px; font-size: 13px; font-weight: 600; font-family: inherit;
+    background: rgba(255,255,255,0.05); color: #a0aec0;
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; cursor: pointer;
+  }
+  .btn-sec:disabled { color: #3a3f4b; cursor: default; }
+
+  .history-entry {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; margin-bottom: 4px;
+    background: rgba(255,255,255,0.02); border-radius: 8px;
+    animation: slideIn 0.3s ease;
+  }
+  .history-num { font-size: 10px; color: #4a5568; font-weight: 600; min-width: 20px; }
+  .history-word {
+    font-size: 17px; font-weight: 800; letter-spacing: 6px; text-transform: uppercase;
+    color: #e2e8f0; flex: 1;
+  }
+  .history-word.won { color: #68d391; }
+  .history-fb { font-size: 13px; min-width: 32px; }
+  .history-fb.green { color: #68d391; }
+  .history-fb.yellow { color: #f6ad55; }
+  .history-count { font-size: 10px; color: #4a5568; }
+
+  .suggestion-card {
+    background: rgba(183,148,244,0.08); border: 1px solid rgba(183,148,244,0.2);
+    border-radius: 14px; padding: 16px 20px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .suggestion-label { font-size: 10px; color: #9f7aea; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; }
+  .suggestion-sub { font-size: 11px; color: #718096; margin-top: 2px; }
+  .suggestion-word {
+    font-size: 24px; font-weight: 800; letter-spacing: 6px; text-transform: uppercase; color: #b794f4;
+  }
+  .btn-use {
+    padding: 6px 12px; font-size: 11px; font-weight: 600; font-family: inherit;
+    background: rgba(159,122,234,0.2); color: #b794f4;
+    border: 1px solid rgba(159,122,234,0.3); border-radius: 8px; cursor: pointer;
+  }
+
+  .candidates-header { display: flex; align-items: center; margin-bottom: 12px; }
+  .candidates-badge {
+    margin-left: 10px; padding: 2px 10px; font-size: 12px; font-weight: 700;
+    border-radius: 20px;
+  }
+  .candidates-badge.few { background: rgba(104,211,145,0.15); color: #68d391; }
+  .candidates-badge.many { background: rgba(99,179,237,0.15); color: #63b3ed; }
+
+  .word-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+  .word-chip {
+    padding: 5px 10px; font-size: 13px; font-weight: 600; letter-spacing: 3px;
+    text-transform: uppercase; background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06); border-radius: 6px;
+    color: #cbd5e0; cursor: pointer; transition: all 0.15s;
+  }
+  .word-chip:hover { background: rgba(99,179,237,0.12); border-color: rgba(99,179,237,0.3); color: #63b3ed; }
+
+  .btn-show-all {
+    margin-top: 10px; padding: 6px 14px; font-size: 11px; font-weight: 600; font-family: inherit;
+    background: transparent; color: #63b3ed;
+    border: 1px solid rgba(99,179,237,0.2); border-radius: 8px; cursor: pointer;
+  }
+
+  .empty-state { text-align: center; padding: 20px 0; }
+  .empty-title { font-size: 14px; color: #fc8181; font-weight: 600; margin-bottom: 4px; }
+  .empty-sub { font-size: 12px; color: #718096; }
+
+  .solved-state { text-align: center; padding: 16px 0; }
+  .solved-label { font-size: 12px; color: #68d391; font-weight: 600; margin-bottom: 6px; }
+  .solved-word { font-size: 32px; font-weight: 800; letter-spacing: 10px; text-transform: uppercase; color: #68d391; }
+
+  .error { color: #fc8181; font-size: 12px; text-align: center; margin-bottom: 8px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div style="text-align:center; margin-bottom:24px;">
+  <h1>Cows & Bulls Solver</h1>
+  <p class="subtitle">Enter your guesses · See what's possible</p>
+  <details style="margin-top:12px; text-align:left; max-width:420px; margin-left:auto; margin-right:auto;">
+    <summary style="cursor:pointer; font-size:12px; color:#63b3ed; font-weight:600; letter-spacing:1px; text-transform:uppercase; list-style:none; display:flex; align-items:center; justify-content:center; gap:6px;">
+      <span id="rulesArrow" style="font-size:10px; transition:transform 0.2s;">▶</span> Rules & Constraints
+    </summary>
+    <div style="margin-top:10px; padding:14px 16px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:10px; font-size:12px; color:#a0aec0; line-height:1.8;">
+      <ul style="padding-left:18px; margin:0;">
+        <li>The secret is a <span style="color:#f687b3;">common 4-letter English word</span> (1,583 words)</li>
+        <li>Repeated letters are allowed (e.g. BOOK, THAT)</li>
+        <li><span style="color:#68d391;">🐂 Bulls</span> — correct letter in the correct position</li>
+        <li><span style="color:#f6ad55;">🐄 Cows</span> — letter exists in the word but at a different position</li>
+        <li>Cows are counted from the <strong style="color:#cbd5e0;">secret's</strong> perspective: each non-bull secret letter checks the full guess (including bull positions)</li>
+        <li>This means the scoring is <strong style="color:#cbd5e0;">asymmetric</strong> — guessing HERB when the secret is BULB gives different cows than guessing BULB when the secret is HERB</li>
+      </ul>
+    </div>
+  </details>
+</div>
+
+<div class="container">
+  <!-- Input Card -->
+  <div class="card">
+    <div class="input-row">
+      <div class="word-col">
+        <label class="label-sm">Your Guess</label>
+        <input type="text" id="guessInput" placeholder="word" maxlength="4" autocomplete="off" autocapitalize="off">
+      </div>
+      <div class="num-col">
+        <label class="label-sm label-green">🐂 Bulls</label>
+        <div class="num-controls">
+          <div class="ctrl-btn" onclick="adjustBulls(-1)">−</div>
+          <span class="num-val green" id="bullsVal">0</span>
+          <div class="ctrl-btn" onclick="adjustBulls(1)">+</div>
+        </div>
+      </div>
+      <div class="num-col">
+        <label class="label-sm label-yellow">🐄 Cows</label>
+        <div class="num-controls">
+          <div class="ctrl-btn" onclick="adjustCows(-1)">−</div>
+          <span class="num-val yellow" id="cowsVal">0</span>
+          <div class="ctrl-btn" onclick="adjustCows(1)">+</div>
+        </div>
+      </div>
+    </div>
+    <div id="errorMsg" class="error hidden"></div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="submitGuess()">Submit</button>
+      <button class="btn-sec" id="undoBtn" onclick="undoGuess()" disabled>Undo</button>
+      <button class="btn-sec" onclick="resetGame()">Reset</button>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="card hidden" id="historyCard">
+    <div class="section-label">Guess History</div>
+    <div id="historyList"></div>
+  </div>
+
+  <!-- Suggestion -->
+  <div class="suggestion-card hidden" id="suggestionCard">
+    <div>
+      <div class="suggestion-label">💡 Suggested Next Guess</div>
+      <div class="suggestion-sub">Optimal for eliminating the most words</div>
+    </div>
+    <div style="margin-left:auto; display:flex; align-items:center; gap:10px;">
+      <span class="suggestion-word" id="suggestionWord"></span>
+      <button class="btn-use" onclick="useSuggestion()">Use</button>
+    </div>
+  </div>
+
+  <!-- Candidates -->
+  <div class="card" id="candidatesCard">
+    <div class="candidates-header">
+      <div class="section-label" style="margin-bottom:0">Possible Words</div>
+      <span class="candidates-badge many" id="candidatesBadge"></span>
+    </div>
+    <div id="candidatesContent"></div>
+  </div>
+</div>
+
+<script>
+const WORD_LIST = [
+  "able","acid","acme","acre","acts","aged","ages","aide","aids","aims","airs","airy",
+  "akin","alas","ally","also","amid","amok","amps","ankh","anna","ante","anti","ants",
+  "apex","arch","area","arid","army","arts","arty","ashy","asks","atom","atop","aunt",
+  "auto","avid","away","awry","axes","axis","baby","back","bade","bags","bail","bait",
+  "bake","bald","bale","ball","balm","band","bane","bang","bank","bans","bare","bark",
+  "barn","bars","base","bash","bass","bath","bats","bays","bead","beak","beam","bean",
+  "bear","beat","beds","beef","been","beer","bees","bell","belt","bend","bent","best",
+  "bets","bias","bike","bill","bind","bird","bite","bits","blah","bled","blew","blip",
+  "blob","bloc","blog","blot","blow","blue","blur","boar","boat","bobs","body","boil",
+  "bold","bolt","bomb","bond","bone","book","boom","boot","bore","born","boss","both",
+  "bout","bowl","boys","brag","bran","brat","bred","brew","brim","brit","brow","buck",
+  "buds","buff","bugs","bulk","bull","bump","bums","bung","bunk","buns","burn","burp",
+  "bust","busy","buzz","byte","cafe","cage","cake","call","calm","came","camp","cane",
+  "cape","caps","card","care","carp","cars","cart","case","cash","cast","cats","cave",
+  "cell","chad","chap","chat","chef","chew","chin","chip","chop","chow","cite","city",
+  "clad","clam","clan","clap","claw","clay","clip","clod","clog","clot","club","clue",
+  "coal","coat","code","coil","coin","cold","cole","colt","comb","come","cone","cook",
+  "cool","cope","cops","copy","cord","core","cork","corn","cost","cosy","coup","cove",
+  "cowl","cows","cozy","crab","cram","crew","crib","crop","crow","crud","cube","cubs",
+  "cups","curb","cure","curl","curs","cusp","cute","cyst","dabs","daft","dale","dame",
+  "damp","dams","dare","dark","darn","dart","dash","data","date","dawn","days","dead",
+  "deaf","deal","dean","dear","debt","deck","deed","deem","deep","deer","demo","dent",
+  "deny","desk","dewy","dial","dice","diet","digs","dill","dime","dine","ding","dint",
+  "dips","dire","dirt","disc","dish","disk","dive","dock","does","dole","doll","dome",
+  "done","doom","door","dope","dose","dots","dove","down","doze","drab","drag","dram",
+  "draw","drew","drip","drop","drum","dual","dubs","duck","duct","dude","duds","duel",
+  "duet","duke","dull","dumb","dump","dune","dung","dunk","dupe","dusk","dust","duty",
+  "dyed","dyes","dyke","each","earl","earn","ears","ease","east","easy","eats","echo",
+  "edge","edgy","edit","eels","eggs","else","emit","ends","epic","eras","euro","even",
+  "ever","evil","exam","exec","exit","eyed","eyes","face","fact","fade","fail","fair",
+  "fake","fall","fame","fang","fans","fare","farm","fart","fast","fate","fats","fawn",
+  "faze","fear","feat","feds","feed","feel","fees","feet","fell","felt","fend","fern",
+  "fest","feud","fiat","figs","file","fill","film","find","fine","fire","firm","fish",
+  "fist","fits","five","flag","flak","flam","flan","flap","flat","flaw","flax","flea",
+  "fled","flee","flew","flex","flip","flit","flog","flop","flow","flub","flue","flux",
+  "foam","foes","foil","fold","folk","fond","font","food","fool","foot","ford","fore",
+  "fork","form","fort","foul","four","fowl","foxy","fray","free","fret","frog","from",
+  "fuel","full","fume","fund","funk","fury","fuse","fuss","fuzz","gags","gain","gait",
+  "gale","gall","game","gang","gape","gaps","garb","gash","gasp","gate","gave","gawk",
+  "gaze","gear","gels","gems","gene","gets","gift","gigs","gild","gill","gilt","gist",
+  "give","glad","glam","glen","glib","glob","glom","glow","glue","glum","glut","gnat",
+  "gnaw","goat","gobs","gods","goes","gold","golf","gone","good","goof","gory","gosh",
+  "grab","grad","gram","gray","gree","grew","grid","grim","grin","grip","grit","grow",
+  "grub","guff","gulf","gulp","gums","gunk","guns","guru","gush","gust","guts","guys",
+  "gyms","hack","haft","hail","hair","hake","hale","half","hall","halt","hams","hand",
+  "hang","hard","hare","harm","harp","hash","hasp","hate","haul","have","hawk","haze",
+  "hazy","head","heal","heap","hear","heat","heed","heel","held","hell","helm","help",
+  "hems","hens","herb","herd","here","hero","hers","hewn","hick","hide","high","hike",
+  "hill","hilt","hind","hint","hips","hire","hits","hive","hobs","hock","hoed","hoes",
+  "hogs","hold","hole","holy","home","hone","hood","hook","hoop","hope","hops","horn",
+  "hose","host","hour","howl","hubs","hued","hues","huge","hugs","hull","hump","hums",
+  "hung","hunk","hunt","hurl","hurt","hush","husk","huts","hymn","hype","iced","icon",
+  "idea","idle","idol","inch","info","into","ions","iris","iron","isle","itch","item",
+  "jabs","jack","jade","jags","jail","jamb","jams","jars","java","jaws","jays","jazz",
+  "jean","jeer","jerk","jest","jets","jibe","jigs","jilt","jinx","jive","jobs","jock",
+  "jogs","join","joke","jolt","josh","jots","jowl","joys","judo","jugs","jump","june",
+  "junk","jury","just","juts","kale","keen","keep","kegs","kelp","kept","keys","kick",
+  "kids","kill","kind","king","kiss","kite","kits","knee","knew","knit","knob","knot",
+  "know","lace","lack","lacy","lads","lady","laid","lain","lair","lake","lamb","lame",
+  "lamp","land","lane","laps","lard","lark","lars","lash","lass","last","late","lawn",
+  "laws","lays","lead","leaf","leak","lean","leap","left","lend","lens","lent","less",
+  "lest","levy","liar","lice","lick","lied","lien","lies","life","lift","like","lily",
+  "limb","lime","limp","line","link","lint","lion","lips","list","live","load","loaf",
+  "loam","loan","lobe","lock","lode","loft","logo","logs","loin","lone","long","look",
+  "loom","loop","loot","lord","lore","lose","loss","lost","lots","loud","love","luck",
+  "lull","lump","lung","lure","lurk","lush","lust","lyre","mace","made","mail","main",
+  "make","male","mall","malt","mama","mane","many","maps","mare","mark","mars","mash",
+  "mask","mass","mast","mate","math","mats","mayo","maze","mead","meal","mean","meat",
+  "meek","meet","meld","melt","memo","mend","menu","mere","mesh","mess","mica","mice",
+  "mild","mile","milk","mill","mime","mind","mine","mini","mint","mire","mirk","miss",
+  "mist","mite","mitt","moan","moat","mobs","mock","mode","mold","mole","molt","mood",
+  "moon","moor","moot","mope","more","morn","moss","most","moth","move","much","muck",
+  "muds","muff","mugs","mule","mull","mums","mung","murk","muse","mush","musk","must",
+  "mute","mutt","myth","nabs","nags","nail","name","nape","naps","nary","nave","navy",
+  "near","neat","neck","need","neon","nerd","nest","nets","news","newt","next","nice",
+  "nick","nine","nite","node","nods","none","nook","noon","norm","nose","note","noun",
+  "nude","nuke","null","numb","nuns","nuts","oafs","oaks","oars","oath","oats","obey",
+  "odds","odes","offs","ogle","oils","oink","okay","olds","omen","omit","once","ones",
+  "only","onto","oops","ooze","opal","open","opts","oral","orbs","orca","ores","ouch",
+  "ours","oust","outs","oven","over","owed","owes","owls","owns","pace","pack","pact",
+  "pads","page","paid","pail","pain","pair","pale","palm","pals","pane","pang","pant",
+  "pare","park","part","pass","past","path","pats","pave","pawn","paws","pays","peak",
+  "peal","pear","peas","peat","peck","peek","peel","peep","peer","pegs","pelt","pend",
+  "pens","peps","perk","perm","pert","pest","pets","pick","pier","pigs","pike","pile",
+  "pill","pimp","pine","pink","pins","pint","pipe","piss","pith","pits","pity","plan",
+  "play","plea","plod","plot","plow","ploy","plug","plum","plus","pock","pods","poem",
+  "poet","poke","pole","poll","polo","pomp","pond","pony","pool","poop","poor","pope",
+  "pops","pore","pork","port","pose","posh","post","pour","pout","pray","prep","prey",
+  "prim","prod","prom","prop","pros","prow","pubs","puck","puff","pugs","pull","pulp",
+  "pump","punk","puns","pups","pure","push","puts","putt","quiz","race","rack","raft",
+  "rage","rags","raid","rail","rain","rake","ramp","rams","rang","rank","rant","raps",
+  "rare","rash","rasp","rate","rats","rave","rays","raze","read","real","ream","reap",
+  "rear","reed","reef","reel","refs","rein","rely","rend","rent","rest","ribs","rice",
+  "rich","ride","rife","rift","rigs","rile","rill","rime","rind","ring","rink","riot",
+  "ripe","rise","risk","rite","road","roam","roar","robe","robs","rock","rode","rods",
+  "role","roll","romp","roof","rook","room","root","rope","rose","rosy","rote","rout",
+  "rove","rows","rubs","rude","rued","rues","ruff","rugs","ruin","rule","rump","rums",
+  "rune","rung","runs","runt","ruse","rush","rust","ruts","sack","safe","sage","said",
+  "sail","sake","sale","salt","same","sand","sane","sang","sank","sash","save","saws",
+  "says","scab","scam","scan","scar","seal","seam","sear","seas","seat","sect","seed",
+  "seek","seem","seen","seep","self","sell","send","sent","sept","sera","sets","sewn",
+  "shag","shed","shim","shin","ship","shit","shod","shoe","shoo","shop","shot","show",
+  "shun","shut","sick","side","sift","sigh","sign","silk","sill","silo","silt","sing",
+  "sink","sips","sire","site","sits","size","skit","slab","slag","slam","slap","slat",
+  "slaw","slay","sled","slew","slid","slim","slit","slob","slop","slot","slow","slug",
+  "slum","slur","smog","snag","snap","snip","snit","snob","snot","snow","snub","snug",
+  "soak","soap","soar","sobs","sock","soda","sofa","soft","soil","sold","sole","some",
+  "song","soon","soot","sore","sort","soul","soup","sour","span","spar","spat","spec",
+  "sped","spin","spit","spot","spry","spud","spun","spur","stab","stag","star","stay",
+  "stem","step","stew","stir","stop","stub","stud","stun","subs","such","suck","suds",
+  "suit","sulk","sump","sums","sung","sunk","sure","surf","swab","swam","swan","swap",
+  "sway","swim","tabs","tack","taco","tact","tads","tail","take","tale","talk","tall",
+  "tame","tamp","tang","tank","tape","taps","tarn","tarp","tart","task","taxa","taxi",
+  "teak","teal","team","tear","teas","tech","teem","teen","tell","temp","tend","tent",
+  "term","test","text","than","that","them","then","they","thin","this","thud","thus",
+  "tick","tide","tidy","tied","tier","ties","tile","till","tilt","time","tine","tint",
+  "tiny","tips","tire","toad","tock","tods","toed","toes","tofu","toga","told","toll",
+  "tomb","tome","tone","tons","took","tool","toot","tops","tore","torn","toss","tour",
+  "tout","town","toys","tram","trap","tray","tree","trek","trim","trio","trip","trod",
+  "trot","true","tsar","tube","tuck","tugs","tune","turf","turn","tusk","tutu","twin",
+  "twit","type","ugly","undo","unit","unto","upon","urge","used","user","uses","vain",
+  "vale","vane","vary","vase","vast","vats","veal","veer","veil","vein","vent","verb",
+  "very","vest","veto","vial","vice","vied","vies","view","vile","vine","visa","void",
+  "volt","vote","wade","wage","wags","wail","wait","wake","walk","wall","wand","wane",
+  "want","ward","warm","warn","warp","wars","wart","wary","wash","wasp","wave","wavy",
+  "waxy","ways","weak","weal","wean","wear","webs","weed","week","weep","weld","well",
+  "welt","went","were","west","what","when","whey","whim","whip","whiz","whom","wick",
+  "wide","wife","wild","will","wilt","wily","wimp","wind","wine","wing","wink","wins",
+  "wipe","wire","wiry","wise","wish","wisp","wits","woes","woke","wolf","womb","wont",
+  "wood","wool","word","wore","work","worm","worn","wove","wrap","wren","writ","yaks",
+  "yams","yank","yard","yarn","yawn","year","yell","yelp","yoga","yoke","your","yowl",
+  "yurt","zany","zaps","zeal","zero","zest","zinc","zing","zone","zoom","zoos"
+];
+
+let candidates = [...WORD_LIST];
+let history = [];
+let bullsVal = 0;
+let cowsVal = 0;
+let showAll = false;
+let currentSuggestion = pickBestGuess(WORD_LIST);
+
+function computeFeedback(guess, secret) {
+  const g = guess.toLowerCase().split("");
+  const s = secret.toLowerCase().split("");
+  let bulls = 0, cows = 0;
+  const isBull = [false, false, false, false];
+
+  for (let i = 0; i < 4; i++) {
+    if (g[i] === s[i]) { bulls++; isBull[i] = true; }
+  }
+
+  const guessUsed = [false, false, false, false];
+  for (let i = 0; i < 4; i++) {
+    if (isBull[i]) continue;
+    for (let j = 0; j < 4; j++) {
+      if (i === j) continue;
+      if (guessUsed[j]) continue;
+      if (s[i] === g[j]) { cows++; guessUsed[j] = true; break; }
+    }
+  }
+  return { bulls, cows };
+}
+
+function filterCandidates(cands, guess, bulls, cows) {
+  return cands.filter(w => {
+    const fb = computeFeedback(guess, w);
+    return fb.bulls === bulls && fb.cows === cows;
+  });
+}
+
+function pickBestGuess(cands) {
+  if (cands.length <= 2) return cands[0];
+  if (cands.length > 200) return cands[0];
+  let bestWord = cands[0], bestWorst = Infinity;
+  const sample = cands.slice(0, Math.min(cands.length, 60));
+  for (const guess of sample) {
+    const buckets = {};
+    for (const secret of cands) {
+      const fb = computeFeedback(guess, secret);
+      const key = fb.bulls + "," + fb.cows;
+      buckets[key] = (buckets[key] || 0) + 1;
+    }
+    const worst = Math.max(...Object.values(buckets));
+    if (worst < bestWorst) { bestWorst = worst; bestWord = guess; }
+  }
+  return bestWord;
+}
+
+function adjustBulls(d) {
+  bullsVal = Math.max(0, Math.min(4, bullsVal + d));
+  document.getElementById("bullsVal").textContent = bullsVal;
+}
+function adjustCows(d) {
+  cowsVal = Math.max(0, Math.min(4, cowsVal + d));
+  document.getElementById("cowsVal").textContent = cowsVal;
+}
+
+function showError(msg) {
+  const el = document.getElementById("errorMsg");
+  if (msg) { el.textContent = msg; el.classList.remove("hidden"); }
+  else { el.classList.add("hidden"); }
+}
+
+function submitGuess() {
+  const input = document.getElementById("guessInput");
+  const word = input.value.trim().toLowerCase();
+  if (word.length !== 4 || !/^[a-z]+$/.test(word)) { showError("Enter a valid 4-letter word"); return; }
+  showError("");
+
+  const newCandidates = filterCandidates(candidates, word, bullsVal, cowsVal);
+  history.push({ guess: word, bulls: bullsVal, cows: cowsVal, before: candidates.length, after: newCandidates.length });
+  candidates = newCandidates;
+  showAll = false;
+
+  if (candidates.length > 0) { currentSuggestion = pickBestGuess(candidates); }
+  else { currentSuggestion = null; }
+
+  input.value = "";
+  bullsVal = 0; cowsVal = 0;
+  document.getElementById("bullsVal").textContent = "0";
+  document.getElementById("cowsVal").textContent = "0";
+
+  render();
+}
+
+function undoGuess() {
+  if (history.length === 0) return;
+  history.pop();
+  candidates = [...WORD_LIST];
+  for (const entry of history) {
+    candidates = filterCandidates(candidates, entry.guess, entry.bulls, entry.cows);
+  }
+  currentSuggestion = candidates.length > 0 ? pickBestGuess(candidates) : null;
+  showAll = false;
+  render();
+}
+
+function resetGame() {
+  history = [];
+  candidates = [...WORD_LIST];
+  currentSuggestion = pickBestGuess(WORD_LIST);
+  bullsVal = 0; cowsVal = 0; showAll = false;
+  document.getElementById("guessInput").value = "";
+  document.getElementById("bullsVal").textContent = "0";
+  document.getElementById("cowsVal").textContent = "0";
+  showError("");
+  render();
+}
+
+function useSuggestion() {
+  if (currentSuggestion) document.getElementById("guessInput").value = currentSuggestion;
+}
+
+function useWord(word) {
+  document.getElementById("guessInput").value = word;
+}
+
+function toggleShowAll() {
+  showAll = true;
+  render();
+}
+
+function render() {
+  // History
+  const hCard = document.getElementById("historyCard");
+  const hList = document.getElementById("historyList");
+  if (history.length > 0) {
+    hCard.classList.remove("hidden");
+    hList.innerHTML = history.map((e, i) =>
+      `<div class="history-entry">
+        <span class="history-num">#${i + 1}</span>
+        <span class="history-word${e.bulls === 4 ? ' won' : ''}">${e.guess}</span>
+        <span class="history-fb green">🐂${e.bulls}</span>
+        <span class="history-fb yellow">🐄${e.cows}</span>
+        <span class="history-count">${e.before} → ${e.after}</span>
+      </div>`
+    ).join("");
+  } else {
+    hCard.classList.add("hidden");
+  }
+
+  // Undo button
+  document.getElementById("undoBtn").disabled = history.length === 0;
+
+  // Suggestion
+  const sCard = document.getElementById("suggestionCard");
+  if (currentSuggestion && candidates.length > 1) {
+    sCard.classList.remove("hidden");
+    document.getElementById("suggestionWord").textContent = currentSuggestion;
+  } else {
+    sCard.classList.add("hidden");
+  }
+
+  // Candidates
+  const badge = document.getElementById("candidatesBadge");
+  badge.textContent = candidates.length;
+  badge.className = "candidates-badge " + (candidates.length <= 5 ? "few" : "many");
+
+  const content = document.getElementById("candidatesContent");
+  if (candidates.length === 0) {
+    content.innerHTML = `<div class="empty-state">
+      <div class="empty-title">No words match! 🤔</div>
+      <div class="empty-sub">Double-check your feedback, or the word may not be in the dictionary. Try Undo.</div>
+    </div>`;
+  } else if (candidates.length === 1) {
+    content.innerHTML = `<div class="solved-state">
+      <div class="solved-label">🎯 It must be:</div>
+      <div class="solved-word">${candidates[0]}</div>
+    </div>`;
+  } else {
+    const display = showAll ? candidates : candidates.slice(0, 40);
+    let html = '<div class="word-grid">';
+    html += display.map(w => `<span class="word-chip" onclick="useWord('${w}')">${w}</span>`).join("");
+    html += '</div>';
+    if (candidates.length > 40 && !showAll) {
+      html += `<button class="btn-show-all" onclick="toggleShowAll()">Show all ${candidates.length} words</button>`;
+    }
+    content.innerHTML = html;
+  }
+}
+
+// Init
+document.getElementById("guessInput").addEventListener("input", function() {
+  this.value = this.value.replace(/[^a-zA-Z]/g, "").slice(0, 4);
+});
+document.getElementById("guessInput").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") submitGuess();
+});
+
+document.querySelector('details').addEventListener('toggle', function() {
+  document.getElementById('rulesArrow').style.transform = this.open ? 'rotate(90deg)' : 'rotate(0deg)';
+});
+
+render();
+</script>
+</body>
+</html>
